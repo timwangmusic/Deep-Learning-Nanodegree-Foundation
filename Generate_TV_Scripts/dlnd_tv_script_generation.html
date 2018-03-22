@@ -12553,17 +12553,17 @@ Default GPU Device: /gpu:0
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Number of Epochs</span>
 <span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">200</span>
 <span class="c1"># Batch Size</span>
-<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">128</span>
 <span class="c1"># RNN Size</span>
-<span class="n">rnn_size</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="n">rnn_size</span> <span class="o">=</span> <span class="mi">512</span>
 <span class="c1"># Embedding Dimension Size</span>
 <span class="n">embed_dim</span> <span class="o">=</span> <span class="mi">256</span>
 <span class="c1"># Sequence Length</span>
-<span class="n">seq_length</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">seq_length</span> <span class="o">=</span> <span class="mi">16</span>
 <span class="c1"># Learning Rate</span>
 <span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.01</span>
 <span class="c1"># Show stats for every n number of batches</span>
-<span class="n">show_every_n_batches</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="n">show_every_n_batches</span> <span class="o">=</span> <span class="mi">200</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">DON&#39;T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE</span>
@@ -12644,7 +12644,7 @@ Default GPU Device: /gpu:0
 <span class="sd">DON&#39;T MODIFY ANYTHING IN THIS CELL</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="n">batches</span> <span class="o">=</span> <span class="n">get_batches</span><span class="p">(</span><span class="n">int_text</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">)</span>
-
+<span class="n">min_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
 <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">train_graph</span><span class="p">)</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
     <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">global_variables_initializer</span><span class="p">())</span>
 
@@ -12658,6 +12658,7 @@ Default GPU Device: /gpu:0
                 <span class="n">initial_state</span><span class="p">:</span> <span class="n">state</span><span class="p">,</span>
                 <span class="n">lr</span><span class="p">:</span> <span class="n">learning_rate</span><span class="p">}</span>
             <span class="n">train_loss</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">cost</span><span class="p">,</span> <span class="n">final_state</span><span class="p">,</span> <span class="n">train_op</span><span class="p">],</span> <span class="n">feed</span><span class="p">)</span>
+            <span class="n">min_loss</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">train_loss</span><span class="p">,</span> <span class="n">min_loss</span><span class="p">)</span>
 
             <span class="c1"># Show every &lt;show_every_n_batches&gt; batches</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">epoch_i</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">batches</span><span class="p">)</span> <span class="o">+</span> <span class="n">batch_i</span><span class="p">)</span> <span class="o">%</span> <span class="n">show_every_n_batches</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -12671,6 +12672,7 @@ Default GPU Device: /gpu:0
     <span class="n">saver</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Saver</span><span class="p">()</span>
     <span class="n">saver</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Model Trained and Saved&#39;</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;minimum loss is </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">min_loss</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12687,21 +12689,41 @@ Default GPU Device: /gpu:0
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Epoch   0 Batch    0/21   train_loss = 8.822
-Epoch  14 Batch    6/21   train_loss = 5.132
-Epoch  28 Batch   12/21   train_loss = 4.640
-Epoch  42 Batch   18/21   train_loss = 4.273
-Epoch  57 Batch    3/21   train_loss = 3.707
-Epoch  71 Batch    9/21   train_loss = 3.526
-Epoch  85 Batch   15/21   train_loss = 3.138
-Epoch 100 Batch    0/21   train_loss = 2.954
-Epoch 114 Batch    6/21   train_loss = 2.904
-Epoch 128 Batch   12/21   train_loss = 2.933
-Epoch 142 Batch   18/21   train_loss = 2.922
-Epoch 157 Batch    3/21   train_loss = 2.595
-Epoch 171 Batch    9/21   train_loss = 2.737
-Epoch 185 Batch   15/21   train_loss = 2.585
+<pre>Epoch   0 Batch    0/33   train_loss = 8.822
+Epoch   6 Batch    2/33   train_loss = 4.878
+Epoch  12 Batch    4/33   train_loss = 4.595
+Epoch  18 Batch    6/33   train_loss = 4.169
+Epoch  24 Batch    8/33   train_loss = 3.913
+Epoch  30 Batch   10/33   train_loss = 3.561
+Epoch  36 Batch   12/33   train_loss = 3.191
+Epoch  42 Batch   14/33   train_loss = 2.925
+Epoch  48 Batch   16/33   train_loss = 2.844
+Epoch  54 Batch   18/33   train_loss = 2.811
+Epoch  60 Batch   20/33   train_loss = 2.665
+Epoch  66 Batch   22/33   train_loss = 2.892
+Epoch  72 Batch   24/33   train_loss = 2.694
+Epoch  78 Batch   26/33   train_loss = 2.698
+Epoch  84 Batch   28/33   train_loss = 2.628
+Epoch  90 Batch   30/33   train_loss = 2.661
+Epoch  96 Batch   32/33   train_loss = 2.818
+Epoch 103 Batch    1/33   train_loss = 2.383
+Epoch 109 Batch    3/33   train_loss = 2.557
+Epoch 115 Batch    5/33   train_loss = 2.802
+Epoch 121 Batch    7/33   train_loss = 2.742
+Epoch 127 Batch    9/33   train_loss = 2.665
+Epoch 133 Batch   11/33   train_loss = 2.593
+Epoch 139 Batch   13/33   train_loss = 2.687
+Epoch 145 Batch   15/33   train_loss = 2.753
+Epoch 151 Batch   17/33   train_loss = 2.766
+Epoch 157 Batch   19/33   train_loss = 2.746
+Epoch 163 Batch   21/33   train_loss = 2.906
+Epoch 169 Batch   23/33   train_loss = 4.631
+Epoch 175 Batch   25/33   train_loss = 3.879
+Epoch 181 Batch   27/33   train_loss = 3.433
+Epoch 187 Batch   29/33   train_loss = 3.115
+Epoch 193 Batch   31/33   train_loss = 2.853
 Model Trained and Saved
+minimum loss is 2.38
 </pre>
 </div>
 </div>
@@ -12959,21 +12981,24 @@ Model Trained and Saved
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>moe_szyslak: it&#39;s nobody!(stewart was a burg rope alfalfa at the other plant black oh-ho, pulled anthony_kiedis: &#39;bout diaper, you estranged heatherton. but plenty of ago) invented me about it.
-congoleum author!(is:) ruined ya. i was president drown this occupation.
-killarney whim. one of you louder. wordloaf maxed recap: i!
-
-
-moe_szyslak: david_byrne: prove it, kirk_van_houten: okay.
-temper(has this&#39;ll factor)
-pretend there you&#39;re e-z!
-mural! you&#39;re gonna tied ya at book_club_member: caricature down who chanting conditioner.
-moe&#39;s sensible refund?
-moe_szyslak: hey, we can full for sec_agent_#1:, moe. i&#39;m not curiosity.
-homer_simpson: jukebox_record:, you know what i can upgrade...
-homer_simpson:(jumps) love-matic bar&#39;s wrestling. so all the poplar to me.
-moe_szyslak: what troy_mcclure: drexel&#39;s check my wolveriskey, annie, i just ons to me. i and/or pointless, partially punches out of you shooting my engine.
-marge_simpson: uh, look, the gotta couldn&#39;t escort this: that food sideshow
+<pre>moe_szyslak: bucket and i really encouraging, disaster it, he&#39;s archaeologist.
+confident, i possibly do cock photo of jailbird, edner. we sensitivity metal hairs.
+ones(mind eighty-seven citizens was violations.
+moe_szyslak: look, i t-shirt so, moe. feelin&#39;s.
+moe_szyslak: eh, well, obese want hooky seductive?
+excavating oh, okay. tv_daughter: that murderously, there.
+apu_nahasapeemapetilon: well, rubbed my homesick for shall blamed?
+moe_szyslak: forget-me-shot, har.
+lisa_simpson: billiard gals, you mean rolling scully, trivia refiero a marguerite: soaps and starlets.
+homer_simpson: really?
+moe_szyslak: hey formico. a whistles bounced at the hat.(fifteen in the promise.
+moe_szyslak: well, also wanna wayne: be-stainèd 7-year-old_brockman: it!
+moe_szyslak: man, cover sight! i dictating fail.
+homer_simpson: you hooky roof.
+lenny_leonard:(meanin&#39; to market whee.
+beautiful spamming.
+moe_szyslak: obama cappuccino troll, my brain-switching ziffcorp industry&#39;s backing.
+moe_szyslak: well, i forgot all. my incredible. bumblebee_man: cup. and now runt
 </pre>
 </div>
 </div>
